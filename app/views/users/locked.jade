@@ -1,0 +1,17 @@
+extends ../layouts/default-socket
+
+block main
+	h1 Welcome
+	div
+		b ROOMS
+		#rooms
+	div
+		#conversation
+		input(id="data")
+		input(type="button", id="datasend", value="send")
+
+	div
+		#globalConversation
+
+	div
+		#connectedUsers

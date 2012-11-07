@@ -1,0 +1,27 @@
+extends auth
+
+block auth
+  form.signup.form-horizontal(action="/users/#{user._id}", method="post")
+    input(type="hidden", name="_method", value="put")
+    .control-group
+      label.control-label(for='name') Full name
+      .controls
+        input#name(type='text', name="name", placeholder='Full name', value='#{user.name}')
+
+    .control-group
+      label.control-label(for='email') Email
+      .controls
+        input#email(type='text', name="email", placeholder='Email', value='#{user.email}')
+
+    .control-group
+      label.control-label(for='username') Username
+      .controls
+        input#username(type='text', name="username", placeholder='Username', value='#{user.username}')
+
+    .control-group
+      label.control-label(for='agency') Agency
+      .controls
+        input#agency(type='text', name="agency", placeholder='Agency', value='#{user.agency}')
+
+    .form-actions
+      button.btn.btn-primary(type='submit') edit

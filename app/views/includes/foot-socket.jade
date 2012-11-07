@@ -1,0 +1,146 @@
+script(type='text/javascript', src='/js/jquery.min.js')
+script(type='text/javascript', src='/js/bootstrap.min.js')
+script(type='text/javascript', src='/js/bootbox.js')
+script(type='text/javascript', src='/js/jquery.tagsinput.min.js')
+script(type='text/javascript', src='/js/app.js')
+script(type='text/javascript', src='/socket.io/socket.io.js')
+script(type="text/javascript")
+	var socket = io.connect();
+
+	// store all the connected users here
+	var users = [];
+
+	//store your username here
+	var you = "#{user._id}";
+	console.log('your user: ', you);
+
+	// on connection to server, ask for user's name with an anonymous callback
+	socket.on('connect', function(){
+		// call the server-side function 'adduser' and send one parameter (value of prompt)
+		socket.emit('adduser', "!{user._id}");
+	});
+
+	// only display this when a new user is connected
+	socket.on('newConnection', function (data) {
+		console.log('users connected: ', data);
+	});
+
+	// display this when new users connect
+	socket.on('allUsersConnected', function(data) {
+		console.log('users connected: ', data);
+
+	})
+
+	//update array when someone leaves
+	socket.on('currentUsers', function(data) {
+		console.log('users connected: ', data);
+
+		//update id for all conected users
+		socket.emit('update id', you)
+	})
+
+
+	// listener, whenever the server emits 'updatechat', this updates the chat body
+	socket.on('updatechat', function (username, data) {
+		$('#conversation').append('<b>'+username + ':</b> ' + data + '<br>');
+	});
+
+	// listener, whenever the server emits 'updaterooms', this updates the room the client is in
+	socket.on('allRooms', function(username, data, current_room) {
+		$('#globalConversation').append('<b>'+username + 'in ' + current_room + ':</b> ' + data + '<br>');
+	});
+	
+	socket.on('news', function (data) {
+		$('#connectedUsers').append('<b>' +  data + '<br>');
+	});
+
+	// listener, whenever the server emits 'updaterooms', this updates the room the client is in
+	socket.on('updaterooms', function(rooms, current_room) {
+		$('#rooms').empty();
+		$.each(rooms, function(key, value) {
+			if(value == current_room){
+				$('#rooms').append('<div>' + value + '</div>');
+				if (key >= 2) {
+					$('#data, #datasend	').css({'display' : 'none'})
+				} else {
+				$('#data, #datasend	').css({'display' : 'inline-block'})
+				}
+			}
+			else {
+				//$('#rooms').append('<div><a href="#" onclick="switchRoom(\''+value+'\')">' + value + '</a></div>');
+			}
+		});
+	});
+
+	socket.on('winner', function(data) {
+		console.log('the winner is ', data)
+	})
+
+	socket.on('winner', function(data) {
+		socket.emit('update id', you)
+	})
+
+	socket.on('rebuild', function(data) {
+		socket.emit('update id', you)
+	})
+
+	function switchRoom(room){
+		socket.emit('switchRoom', room);
+	};
+
+	// on load of page
+	$(function(){
+
+		console.log('list the array')
+
+		// when the client clicks SEND
+		//- $('#datasend').click( function() {
+		//- 	var message = $('#data').val();
+		//- 	$('#data').val('');
+		//- 	// tell server to execute 'sendchat' and send along one parameter
+		//- 	socket.emit('sendchat', message, 1);
+		//- 	console.log('username')
+		//- });
+
+		//start value for key pressing 
+		var keyressed = '37';
+
+		$("body").keypress(function(e) {
+
+			//- console.log($(this))
+
+			//- if((e.keyCode || e.which) == 37) {
+			//- 	var message = 'left'
+			//- 	if (keyressed == '37' ) {
+			//- 		socket.emit('sendchat', message, you, 1)
+			//- 		keyressed = '39'
+			//- 	}
+			//- } else if ((e.keyCode || e.which) == 39) {
+			//- 	var message = 'right'
+			//- 	if (keyressed == '39' ) {
+			//- 		socket.emit('sendchat', message, you, 1)
+			//- 		keyressed = '37'
+			//- 	}
+			//- }
+			//- console.log(keyressed)
+
+
+			// ONLY ALLOW ROOM1 AND 2 TO CLICK ON KEYS
+
+			if(e.which == 13) {
+				var message = 'right'
+				socket.emit('sendchat', message, you, 1)
+			}
+
+	}); 
+
+		// when the client hits ENTER on their keyboard
+		$('#data').keypress(function(e) {
+			if(e.which == 13) {
+				$(this).blur();
+				$('#datasend').focus().click();
+			}
+		});
+	});
+
+	
