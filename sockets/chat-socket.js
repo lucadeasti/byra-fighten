@@ -21,6 +21,8 @@ function socket1(io, app, board, five, led) {
 
 	// store all users in a global object array
 	var userObjectArr = [];
+	var usernames = {};
+	var onlineClients = {};
 	var userIdObject = {};
 
 	// list all the rooms
@@ -34,11 +36,15 @@ function socket1(io, app, board, five, led) {
 			// store the UserObject in the socket session for this client
 			socket.userObj = userObj;
 
+			onlineClients[userObj.id] = socket.id;
+
 			// add the client's usernameID to the global list
 			userIdObject[userObj] = userObj;
 
 			// add the userObject to the global userObject Array
 			userObjectArr.push(userIdObject[userObj]);
+
+
 
 			// send array of conencted userObjectArr to the client
 			io.sockets.emit('allUsersConnected', userObjectArr)
@@ -236,6 +242,20 @@ function socket1(io, app, board, five, led) {
 			socket.broadcast.to(newroom).emit('updatechat', 'SERVER', socket.userObj+' has joined this room');
 			socket.emit('updaterooms', rooms, newroom);
 		});
+
+		// basic function for private message
+		socket.on('private message', function (from, to, msg) {
+    	for(i in userObjectArr) {
+    		function foundResult(value, index, array) {
+    			return value.id === to;
+    		};
+    	};
+
+    	var result = userObjectArr.filter(foundResult);
+    	var id = onlineClients[to];
+    	io.sockets.socket(id).emit('msg', from, msg)
+
+  	});
 
 	});
 
