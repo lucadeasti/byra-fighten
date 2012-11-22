@@ -55,7 +55,7 @@ script(type="text/javascript")
 
 		// do a for each loop on the cleared connected users list and append each user
 		$.each(usersArr, function (key, value) {
-			$('#connectedUsers').append('<li><a href="#">' + value.name + '</a></li>');
+			$('#connectedUsers').append('<li><a href="' + value.id +'">' + value.name + '</a></li>');
 		});
 
 		// Assign player 1 name and in the future picture to the right health bar
@@ -154,8 +154,8 @@ script(type="text/javascript")
 	});
 
 	// make this in to a self invoking function
-	$player1bar = $("#player1span")
-	$player2bar = $("#player2span")
+	$player1bar = $("#player1span");
+	$player2bar = $("#player2span");
 	var player1healthLoaded = 100;
 	var player2healthLoaded = 100;
 
@@ -191,7 +191,8 @@ script(type="text/javascript")
 		return;
 	};
 
-	// on load of page
+	// This function runs inside the countdown function
+	// and handels what key to press + attack emit to the server
 	function keypressed () {
 		//start value for key pressing 
 		var keyressed = '37'; // dont think we need this var
@@ -215,3 +216,13 @@ script(type="text/javascript")
 			};
 		});
 	};
+
+	$('#connectedUsers').on('click', 'a', function (e) {
+		e.preventDefault();
+		clickedUser = $(this).attr('href')// grap the users id / href attr
+		socket.emit('private message', userObj.name, clickedUser, 'hello');
+	});
+
+	socket.on('msg', function (from, msg) {
+		console.log(from + ' sent you a message: ' + msg)
+	});
