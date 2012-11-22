@@ -135,7 +135,7 @@ function socket1(io, app, board, five, led) {
 		var count = 0;
 
 		// when the client emits 'sendchat', this listens and executes
-		socket.on('sendchat', function (data, you, userperson, player1healthLoaded, player2healthLoaded) {
+		socket.on('attack', function (data, you, userperson, player1healthLoaded, player2healthLoaded) {
 
 				//create counting function
 				count = count +  userperson
