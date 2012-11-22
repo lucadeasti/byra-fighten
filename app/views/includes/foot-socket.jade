@@ -3,12 +3,17 @@ script(type='text/javascript', src='/js/bootstrap.min.js')
 script(type='text/javascript', src='/js/bootbox.js')
 script(type='text/javascript', src='/js/jquery.tagsinput.min.js')
 script(type='text/javascript', src='/js/app.js')
+script(type='text/javascript', src='/js/keypress.js')
 script(type='text/javascript', src='/socket.io/socket.io.js')
 script(type="text/javascript")
 	
 	/*
 		TODO:
-		
+			// If player 1 leaves the game he should lose and the opponent should win
+			// Add animation to helth loss
+			// Add users profile picture
+			// Add "waiting for player" when we are one player
+			// When one player change the count to "waiting for player"
 		BUGS:
 
 	*/
@@ -16,7 +21,8 @@ script(type="text/javascript")
 	var socket = io.connect();
 
 	var runFirstCountdown = true; // Global variable if we should run the countdown from allusersconnected or winner?
-	
+	var attackKey = true;
+
 	usersArr = []; // Store all the connected users here
 
 	// Store userobject iwth all its properties
@@ -24,9 +30,9 @@ script(type="text/javascript")
 		name   : "#{user.name}",
 		id 	   : "#{user.id}",
 		agency : "#{user.agency}"
-	}; // TODO: add a prop for user image
+	};
 
-	console.log('your user: ', userObj); // Console log out who you are
+	console.log('your user: ', userObj);
 
 	// on connection to socket, we send the users profile back to the server
 	socket.on('connect', function (){
@@ -45,11 +51,11 @@ script(type="text/javascript")
 		console.log('allUsersConnected', data);
 
 		// clear the connected users list
-		$('#connectedUsers').html('<div></div>');
+		$('#connectedUsers').html('');
 
 		// do a for each loop on the cleared connected users list and append each user
 		$.each(usersArr, function (key, value) {
-			$('#connectedUsers').append('<div><a href="#">' + value.name + '</a></div>');
+			$('#connectedUsers').append('<li><a href="#">' + value.name + '</a></li>');
 		});
 
 		// Assign player 1 name and in the future picture to the right health bar
@@ -59,19 +65,20 @@ script(type="text/javascript")
 		if(usersArr.length >= 2 ) {
 			$('#usernamePlayer2').html('<h1>' + usersArr[1].name + '</h1>');
 		} else {
-			$('#usernamePlayer2').html('<div></div>');
+			$('#usernamePlayer2').html('<h1>waiting for player</h1>');
 		}
 
 		// Run the countdown if their is 2 people connected
 		if(usersArr.length === 2 && runFirstCountdown) {
-			$("body").unbind('keypress');
+			$("body").unbind('keyup');
 			countdown(); // Run the countdown function
 		};
 
+		// If all players leave exept one reset the game and let him wait for new players
 		if(usersArr.length <= 1 ) {
 			runFirstCountdown = true;
 			resethealth();
-			$("body").unbind('keypress');
+			$("body").unbind('keyup');
 		};
 
 	})
@@ -85,7 +92,7 @@ script(type="text/javascript")
 		if(userLeft == usersArr[0].id || userLeft == usersArr[1].id ) {
 			socket.emit('reset count', 0);
 			resethealth();
-			$("body").unbind('keypress');
+			$("body").unbind('keyup');
 		};
 
 		usersArr = data; // create a new user array with the players left
@@ -96,6 +103,7 @@ script(type="text/javascript")
 
 	// listener, whenever the server emits 'updaterooms', this updates the room the client is in
 	socket.on('allRooms', function (username, data, person, player1healthLoadedServer, player2healthLoadedServer) {
+		console.log('allRooms')
 		player1healthLoaded = player1healthLoadedServer;
 		player2healthLoaded = player2healthLoadedServer;
 		$('#globalConversation').append('<b>'+username + ' in ' + ':</b> ' + data + '<br>');
@@ -133,7 +141,7 @@ script(type="text/javascript")
 		console.log('the winner is ', winner.name);
 		socket.emit('update id', userObj);
 		socket.emit('reset count', 0);
-		$("body").unbind('keypress');
+		$("body").unbind('keyup');
 		runFirstCountdown = false // change the variable so we can run the countdown from the winning function instead.
 		if(!runFirstCountdown) {
 			countdown();
@@ -174,7 +182,7 @@ script(type="text/javascript")
 		var count = 3;	
 		var countdown = setInterval(function () {
 			$(".countdown").html(count + " seconds remaining!");
-			if (count == 0) {
+			if (count === 0) {
 				keypressed(); // run the keypress function to allow player 1 and 2 to fight
 				clearInterval(countdown); // stops the countdown, TODO: remove the div that holds the number
 			}
@@ -187,24 +195,23 @@ script(type="text/javascript")
 	function keypressed () {
 		//start value for key pressing 
 		var keyressed = '37'; // dont think we need this var
-		$("body").keypress(function (e) {
+		$("body").keyup(function (e) {
 			// ONLY ALLOW ROOM1 AND 2 TO CLICK ON KEYS
-			if (userObj.id === usersArr[0].id || userObj.id === usersArr[1].id) {	
+			if (userObj.id === usersArr[0].id || userObj.id === usersArr[1].id) {
+				var message = 'right' // only a message, has no meaning
+				var attackDamage = 5;
 
-				if(e.which == 13) { // We are cheching if the keypress is enter and if so do the function send chat
-					var message = 'right' // only a message, has no meaning
-					socket.emit('sendchat', message, userObj, 5, player1healthLoaded, player2healthLoaded); // change name on send chat to attack
-					console.log('player 1 helth is ', player1healthLoaded);
-					console.log('player 2 helth is ', player2healthLoaded);
-				};
+				if(e.which === 39 && attackKey) { // We are cheching if the keypress is enter and if so do the function send chat
+					socket.emit('attack', message, userObj, attackDamage, player1healthLoaded, player2healthLoaded); // change name on send chat to attack
+					//console.log('player 1 helth is ', player1healthLoaded);
+					//console.log('player 2 helth is ', player2healthLoaded);
+					attackKey = false;
+				} else if (e.which === 37 && !attackKey) {
+					socket.emit('attack', message, userObj, attackDamage, player1healthLoaded, player2healthLoaded); // change name on send chat to attack
+					//console.log('player 1 helth is ', player1healthLoaded);
+					//console.log('player 2 helth is ', player2healthLoaded);
+					attackKey = true;
+				}
 			};
 		});
 	};
-
-	// when the client hits ENTER on their keyboard
-	$('#data').keypress(function (e) {
-		if(e.which == 13) {
-			$(this).blur();
-			$('#datasend').focus().click();
-		};
-	});
