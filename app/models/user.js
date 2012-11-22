@@ -6,16 +6,16 @@ var mongoose = require('mongoose')
   , _ = require('underscore')
   , authTypes = [];
 
-var UserSchema = new Schema({
+UserSchema = new Schema({
     name: String
-  , email: String
+  , email: { type: String, required: true }
   , username: String
   , provider: String
   , agency: String
   , test: String
-  , winning : Number, default: 0
-  , losing : Number, default: 0
-  , hashed_password: String
+  , winning: { type: Number, default: 0 }
+  , losing: { type: Number, default: 0 }
+  , hashed_password: { type: String, required: true }
   , salt: String
 })
 
@@ -42,11 +42,7 @@ UserSchema.path('name').validate(function (name) {
   return name.length
 }, 'Name cannot be blank')
 
-UserSchema.path('email').validate(function (email) {
-  // if you are authenticating by any of the oauth strategies, don't validate
-  if (authTypes.indexOf(this.provider) !== -1) return true
-  return email.length
-}, 'Email cannot be blank')
+
 
 UserSchema.path('username').validate(function (username) {
   // if you are authenticating by any of the oauth strategies, don't validate
@@ -78,4 +74,4 @@ UserSchema.method('encryptPassword', function(password) {
   return crypto.createHmac('sha1', this.salt).update(password).digest('hex')
 })
 
-mongoose.model('User', UserSchema)
+User = mongoose.model('User', UserSchema)
