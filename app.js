@@ -38,7 +38,7 @@ var app = express()
   , io = require('socket.io').listen(server);
 
 require('./sockets/chat-socket')(io, app)
-io.set('log level', 1);
+io.set('log level', 2);
 
 require('./settings').boot(app, config, passport)   
 
