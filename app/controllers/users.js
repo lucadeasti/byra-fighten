@@ -1,5 +1,6 @@
 var mongoose = require('mongoose')
-  , User = mongoose.model('User');
+  , User = mongoose.model('User')
+  , Stream = mongoose.model('Stream');
 
 exports.signin = function (req, res) {}
 
@@ -50,10 +51,20 @@ exports.create = function (req, res) {
 // show profile
 exports.show = function (req, res) {
   var user = req.profile
-  res.render('users/show', {
-      title: user.name
-    , user: user
-  })
+  var id = req.profile._id
+  console.log(id)
+  Stream
+    .find({winner : id})
+    .populate('looser', 'name')
+    .populate('winner', 'name')
+    .sort({'time': -1}) // sort by date
+    .exec(function(err, streams) {
+      res.render('users/show', {
+          title: user.name
+        , user: user
+        , streams : streams
+      })
+    });
 }
 
 // edit profile
