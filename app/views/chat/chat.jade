@@ -1,17 +1,47 @@
 extends ../layouts/default-socket
 
 block main
-	h1 Welcome
-	div
-		b ROOMS
-		#rooms
-	div
-		#conversation
-		input(id="data")
-		input(type="button", id="datasend", value="send")
+	.row
+		.span6
+			h1 Welcome
+			div
+				b ROOMS
+				#rooms
+			div
+				#conversation
+				input(id="data")
+				input(type="button", id="datasend", value="send")
+		.span6
+			.countdown
+				p
+	hr
+	.row
+		.span6
+			//- player 1 stuff here
+			div#player1
+				h1 player 1
+				.meter
+					span(id="player1span", style="width:100%")
+				#usernamePlayer1
+				#room1
 
-	div
-		#globalConversation
+		.span6
+			//- player 2 stuff here
+			div#player2
+				h1 player 2
+				.meter
+					span(id="player2span", style="width:100%")
+				#usernamePlayer2
+				#room2
+	hr
+	.row
+		.span8
+			div
+				h1 global log
+				#globalConversation
+		.span4
+			div
+				h1 connected users
+				#connectedUsers
 
-	div
-		#connectedUsers
+
