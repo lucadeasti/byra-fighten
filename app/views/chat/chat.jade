@@ -7,10 +7,6 @@ block main
 			div
 				b ROOMS
 				#rooms
-			div
-				#conversation
-				input(id="data")
-				input(type="button", id="datasend", value="send")
 		.span6
 			.countdown
 				p
@@ -32,6 +28,7 @@ block main
 				.meter
 					span(id="player2span", style="width:100%")
 				#usernamePlayer2
+					h1 waiting for player
 				#room2
 	hr
 	.row
@@ -42,6 +39,6 @@ block main
 		.span4
 			div
 				h1 connected users
-				#connectedUsers
+				ul#connectedUsers
 
 
