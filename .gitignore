@@ -2,3 +2,5 @@
 .DS_Store
 sublime
 node_modules
+
+app/views/includes/foot-socket-2.jade
