@@ -7,6 +7,8 @@ header#header
         .nav-collapse.collapse
           ul.nav
           ul.nav.pull-right
+            li
+              a(href="/stream", title="stream") Stream
             if (req.isAuthenticated())
               li
                 a(href="/chat/"+req.user.id, title="Profile") Chat
