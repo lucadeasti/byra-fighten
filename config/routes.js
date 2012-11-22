@@ -23,6 +23,11 @@ var mongoose = require('mongoose')
   //protected site
   app.get('/chat/:userId', auth.requiresLogin, chat.chat) 
 
+
+  var stream = require('../app/controllers/Xstream')
+
+  app.get('/stream', stream.index)
+
   app.param('userId', function (req, res, next, id) {
     User
       .findOne({ _id : id })
