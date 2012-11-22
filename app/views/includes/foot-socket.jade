@@ -5,142 +5,206 @@ script(type='text/javascript', src='/js/jquery.tagsinput.min.js')
 script(type='text/javascript', src='/js/app.js')
 script(type='text/javascript', src='/socket.io/socket.io.js')
 script(type="text/javascript")
+	
+	/*
+		TODO:
+		
+		BUGS:
+
+	*/
+
 	var socket = io.connect();
 
-	// store all the connected users here
-	var users = [];
-
-	//store your username here
-	var you = "#{user._id}";
-	console.log('your user: ', you);
-
-	// on connection to server, ask for user's name with an anonymous callback
-	socket.on('connect', function(){
-		// call the server-side function 'adduser' and send one parameter (value of prompt)
-		socket.emit('adduser', "!{user._id}");
-	});
-
-	// only display this when a new user is connected
-	socket.on('newConnection', function (data) {
-		console.log('users connected: ', data);
-	});
-
-	// display this when new users connect
-	socket.on('allUsersConnected', function(data) {
-		console.log('users connected: ', data);
-
-	})
-
-	//update array when someone leaves
-	socket.on('currentUsers', function(data) {
-		console.log('users connected: ', data);
-
-		//update id for all conected users
-		socket.emit('update id', you)
-	})
-
-
-	// listener, whenever the server emits 'updatechat', this updates the chat body
-	socket.on('updatechat', function (username, data) {
-		$('#conversation').append('<b>'+username + ':</b> ' + data + '<br>');
-	});
-
-	// listener, whenever the server emits 'updaterooms', this updates the room the client is in
-	socket.on('allRooms', function(username, data, current_room) {
-		$('#globalConversation').append('<b>'+username + 'in ' + current_room + ':</b> ' + data + '<br>');
-	});
+	var runFirstCountdown = true; // Global variable if we should run the countdown from allusersconnected or winner?
 	
-	socket.on('news', function (data) {
-		$('#connectedUsers').append('<b>' +  data + '<br>');
+	usersArr = []; // Store all the connected users here
+
+	// Store userobject iwth all its properties
+	userObj = {
+		name   : "#{user.name}",
+		id 	   : "#{user.id}",
+		agency : "#{user.agency}"
+	}; // TODO: add a prop for user image
+
+	console.log('your user: ', userObj); // Console log out who you are
+
+	// on connection to socket, we send the users profile back to the server
+	socket.on('connect', function (){
+		// call the server-side function 'adduser' and send the userObj back
+		socket.emit('adduser', userObj);
+
+		usersArr = userObj; // and add the user to the client array
+
+	});
+
+	// when a new person connects this function will be displayed to all the connected users
+	socket.on('allUsersConnected', function (data) {
+		
+		usersArr = data; // Update the global usersArr for each client
+
+		console.log('allUsersConnected', data);
+
+		// clear the connected users list
+		$('#connectedUsers').html('<div></div>');
+
+		// do a for each loop on the cleared connected users list and append each user
+		$.each(usersArr, function (key, value) {
+			$('#connectedUsers').append('<div><a href="#">' + value.name + '</a></div>');
+		});
+
+		// Assign player 1 name and in the future picture to the right health bar
+		$('#usernamePlayer1').html('<h1>' + usersArr[0].name + '</h1>');
+		
+		// if we have a second player assign the same information to that persons heath bar
+		if(usersArr.length >= 2 ) {
+			$('#usernamePlayer2').html('<h1>' + usersArr[1].name + '</h1>');
+		} else {
+			$('#usernamePlayer2').html('<div></div>');
+		}
+
+		// Run the countdown if their is 2 people connected
+		if(usersArr.length === 2 && runFirstCountdown) {
+			$("body").unbind('keypress');
+			countdown(); // Run the countdown function
+		};
+
+		if(usersArr.length <= 1 ) {
+			runFirstCountdown = true;
+			resethealth();
+			$("body").unbind('keypress');
+		};
+
+	})
+
+	// Update globla client array when someone leaves
+	socket.on('currentUsers', function (data, userLeft) {
+
+		console.log('currentUsers', data);
+
+		// If user 1 or 2 leaves, reset the count and health
+		if(userLeft == usersArr[0].id || userLeft == usersArr[1].id ) {
+			socket.emit('reset count', 0);
+			resethealth();
+			$("body").unbind('keypress');
+		};
+
+		usersArr = data; // create a new user array with the players left
+		
+		socket.emit('update id', userObj); //update id for all conected users
+
 	});
 
 	// listener, whenever the server emits 'updaterooms', this updates the room the client is in
-	socket.on('updaterooms', function(rooms, current_room) {
+	socket.on('allRooms', function (username, data, person, player1healthLoadedServer, player2healthLoadedServer) {
+		player1healthLoaded = player1healthLoadedServer;
+		player2healthLoaded = player2healthLoadedServer;
+		$('#globalConversation').append('<b>'+username + ' in ' + ':</b> ' + data + '<br>');
+		if (person == 1 ) {
+			player2health();
+		} else if (person == 2) {
+			player1health();
+		};
+	});
+
+	// TODO: This will be removed in the future
+	socket.on('news', function (data) {
+		$.each(usersArr, function(key, value) {
+			$('#connectedUsers').html('<div><a href="#">' + value.name + '</a></div>');
+		});
+	});
+
+	// listener, whenever the server emits 'updaterooms', this updates the room the client is in
+	socket.on('updaterooms', function (rooms, current_room) {
 		$('#rooms').empty();
-		$.each(rooms, function(key, value) {
+		$.each(rooms, function (key, value) {
 			if(value == current_room){
 				$('#rooms').append('<div>' + value + '</div>');
 				if (key >= 2) {
-					$('#data, #datasend	').css({'display' : 'none'})
+					$('#data, #datasend	').css({'display' : 'none'});
 				} else {
-				$('#data, #datasend	').css({'display' : 'inline-block'})
-				}
-			}
-			else {
-				//$('#rooms').append('<div><a href="#" onclick="switchRoom(\''+value+'\')">' + value + '</a></div>');
-			}
+					$('#data, #datasend	').css({'display' : 'inline-block'});
+					console.log(current_room);
+				};
+			};
 		});
 	});
 
-	socket.on('winner', function(data) {
-		console.log('the winner is ', data)
-	})
+	socket.on('winner', function (winner) {
+		console.log('the winner is ', winner.name);
+		socket.emit('update id', userObj);
+		socket.emit('reset count', 0);
+		$("body").unbind('keypress');
+		runFirstCountdown = false // change the variable so we can run the countdown from the winning function instead.
+		if(!runFirstCountdown) {
+			countdown();
+		}
+	});
+	
+	// see if we can add this to the winner function again
+	socket.on('test1', function () {
+		resethealth();
+	});
 
-	socket.on('winner', function(data) {
-		socket.emit('update id', you)
-	})
+	// make this in to a self invoking function
+	$player1bar = $("#player1span")
+	$player2bar = $("#player2span")
+	var player1healthLoaded = 100;
+	var player2healthLoaded = 100;
 
-	socket.on('rebuild', function(data) {
-		socket.emit('update id', you)
-	})
+	function player1health() {
+		player1healthLoaded -= 5;
+		// TODO: Add animation here
+		$player1bar.css({width : player1healthLoaded +'%'});
+	};
 
-	function switchRoom(room){
-		socket.emit('switchRoom', room);
+	function player2health() {
+		player2healthLoaded -= 5;
+		// TODO: Add animation here
+		$player2bar.css({width : player2healthLoaded +'%'});
+	};
+
+	function resethealth() {
+		player1healthLoaded = 100;
+		$player1bar.css({width : player1healthLoaded +'%'});
+		player2healthLoaded = 100;
+		$player2bar.css({width : player2healthLoaded +'%'});
+	};
+
+	function countdown () {
+		var count = 3;	
+		var countdown = setInterval(function () {
+			$(".countdown").html(count + " seconds remaining!");
+			if (count == 0) {
+				keypressed(); // run the keypress function to allow player 1 and 2 to fight
+				clearInterval(countdown); // stops the countdown, TODO: remove the div that holds the number
+			}
+			count--;
+		}, 1000);
+		return;
 	};
 
 	// on load of page
-	$(function(){
-
-		console.log('list the array')
-
-		// when the client clicks SEND
-		//- $('#datasend').click( function() {
-		//- 	var message = $('#data').val();
-		//- 	$('#data').val('');
-		//- 	// tell server to execute 'sendchat' and send along one parameter
-		//- 	socket.emit('sendchat', message, 1);
-		//- 	console.log('username')
-		//- });
-
+	function keypressed () {
 		//start value for key pressing 
-		var keyressed = '37';
-
-		$("body").keypress(function(e) {
-
-			//- console.log($(this))
-
-			//- if((e.keyCode || e.which) == 37) {
-			//- 	var message = 'left'
-			//- 	if (keyressed == '37' ) {
-			//- 		socket.emit('sendchat', message, you, 1)
-			//- 		keyressed = '39'
-			//- 	}
-			//- } else if ((e.keyCode || e.which) == 39) {
-			//- 	var message = 'right'
-			//- 	if (keyressed == '39' ) {
-			//- 		socket.emit('sendchat', message, you, 1)
-			//- 		keyressed = '37'
-			//- 	}
-			//- }
-			//- console.log(keyressed)
-
-
+		var keyressed = '37'; // dont think we need this var
+		$("body").keypress(function (e) {
 			// ONLY ALLOW ROOM1 AND 2 TO CLICK ON KEYS
+			if (userObj.id === usersArr[0].id || userObj.id === usersArr[1].id) {	
 
-			if(e.which == 13) {
-				var message = 'right'
-				socket.emit('sendchat', message, you, 1)
-			}
-
-	}); 
-
-		// when the client hits ENTER on their keyboard
-		$('#data').keypress(function(e) {
-			if(e.which == 13) {
-				$(this).blur();
-				$('#datasend').focus().click();
-			}
+				if(e.which == 13) { // We are cheching if the keypress is enter and if so do the function send chat
+					var message = 'right' // only a message, has no meaning
+					socket.emit('sendchat', message, userObj, 5, player1healthLoaded, player2healthLoaded); // change name on send chat to attack
+					console.log('player 1 helth is ', player1healthLoaded);
+					console.log('player 2 helth is ', player2healthLoaded);
+				};
+			};
 		});
-	});
+	};
 
-	
+	// when the client hits ENTER on their keyboard
+	$('#data').keypress(function (e) {
+		if(e.which == 13) {
+			$(this).blur();
+			$('#datasend').focus().click();
+		};
+	});
