@@ -4,7 +4,7 @@ var mongoose = require('mongoose')
 // locked site
 exports.chat = function (req, res) {
   var user = req.profile
-  res.render('users/locked', {
+  res.render('chat/chat', {
       title: user.name
     , user: user
   })
