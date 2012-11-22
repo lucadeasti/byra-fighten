@@ -5,6 +5,10 @@ var express = require('express')
   , passport = require('passport')
   , LocalStrategy = require('passport-local').Strategy;
 
+// var five = require("johnny-five"),
+// 	  led,
+//     board = new five.Board();
+
 var env = process.env.NODE_ENV || 'development'
 
 //Bootstrap mongodb
@@ -33,7 +37,7 @@ var app = express()
   , server = require('http').createServer(app)
   , io = require('socket.io').listen(server);
 
-require('./config/socket')(io)
+require('./sockets/chat-socket')(io, app)
 io.set('log level', 1);
 
 require('./settings').boot(app, config, passport)   
