@@ -5,9 +5,7 @@ var express = require('express')
   , passport = require('passport')
   , LocalStrategy = require('passport-local').Strategy;
 
-// var five = require("johnny-five"),
-// 	  led,
-//     board = new five.Board();
+
 
 var env = process.env.NODE_ENV || 'development'
 
@@ -37,13 +35,17 @@ var app = express()
   , server = require('http').createServer(app)
   , io = require('socket.io').listen(server);
 
-require('./sockets/chat-socket')(io, app)
-io.set('log level', 2);
 
-require('./settings').boot(app, config, passport)   
+
+require('./settings').boot(app, config, passport)
+
+//require('./sockets/chat-socket')(io, app)
+require('./sockets/socket-fight')(io, app, config)
+io.set('log level', 1);
 
 // Bootstrap routes
 require('./config/routes')(app, passport, auth, io)
+
 
 // start the server
 server.listen(4000)
