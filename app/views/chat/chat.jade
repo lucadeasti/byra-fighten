@@ -1,6 +1,8 @@
 extends ../layouts/default-socket
 
 block main
+	.countdown
+		p
 	.row
 		.span6
 			h1 Welcome
@@ -8,13 +10,12 @@ block main
 				b ROOMS
 				#rooms
 		.span6
-			.countdown
-				p
+			
 	hr
 	.row
 		.span6
 			//- player 1 stuff here
-			div#player1
+			div#player1Info
 				h1 player 1
 				.meter
 					span(id="player1span", style="width:100%")
@@ -23,7 +24,7 @@ block main
 
 		.span6
 			//- player 2 stuff here
-			div#player2
+			div#player2Info
 				h1 player 2
 				.meter
 					span(id="player2span", style="width:100%")
@@ -33,15 +34,19 @@ block main
 	hr
 	.row
 		.span8
-			div
-				h1 global log
-				#globalConversation
+			#fightArea
+				#player1
+				#player2
 		.span4
 			div
 				h1 connected users
 				ul#connectedUsers
 	hr
 	.row
+		.span8
+			div
+				h1 Global log
+				#globalConversation
 		.span8
 			div
 				h1 Private message
