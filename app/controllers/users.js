@@ -52,13 +52,14 @@ exports.create = function (req, res) {
 exports.show = function (req, res) {
   var user = req.profile
   var id = req.profile._id
-  console.log(id)
   Stream
     .find({winner : id})
     .populate('looser', 'name')
     .populate('winner', 'name')
-    .sort({'time': -1}) // sort by date
-    .exec(function(err, streams) {
+    .select('looser -_id')
+    .sort({'looser': -1}) // sort by date
+    .exec(function (err, streams) {
+      //var streams = JSON.stringify(stream)
       res.render('users/show', {
           title: user.name
         , user: user
@@ -89,4 +90,8 @@ exports.update = function(req, res) {
       res.redirect('/')
     }
   )
+}
+
+function test (id) {
+  console.log(id);
 }
