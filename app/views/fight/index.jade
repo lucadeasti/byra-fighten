@@ -1,0 +1,55 @@
+extends ../layouts/default-socketFight
+
+block main
+	.countdown
+		p
+	.row
+		.span6
+			h1 Welcome
+			div
+				b ROOMS
+				#rooms
+		.span6
+			
+	hr
+	.row
+		.span6
+			//- player 1 stuff here
+			div#player1Info
+				h1 player 1
+				.meter
+					span(id="player1span", style="width:100%")
+				#usernamePlayer1
+				#room1
+
+		.span6
+			//- player 2 stuff here
+			div#player2Info
+				h1 player 2
+				.meter
+					span(id="player2span", style="width:100%")
+				#usernamePlayer2
+					h1 waiting for player
+				#room2
+	hr
+	.row
+		.span8
+			#fightArea
+				#player1
+				#player2
+		.span4
+			div
+				h1 connected users
+				ul#connectedUsers
+	hr
+	.row
+		.span8
+			div
+				h1 Global log
+				#globalConversation
+		.span8
+			div
+				h1 Private message
+				#privateMessage
+
+

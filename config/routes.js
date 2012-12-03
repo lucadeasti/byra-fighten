@@ -13,6 +13,9 @@ var mongoose = require('mongoose')
   app.post('/users/session', passport.authenticate('local', {failureRedirect: '/login'}), users.session)
   app.get('/users/:userId', users.show)
 
+  // ajax requests
+  app.get('/loosers', users.loosers)
+
   // edit user
   app.get('/users/:userId/edit', users.edit)
 
@@ -21,8 +24,10 @@ var mongoose = require('mongoose')
 
   var chat = require('../app/controllers/chat')
   //protected site
-  app.get('/chat/:userId', auth.requiresLogin, chat.chat) 
+  app.get('/chat/:userId', auth.requiresLogin, chat.chat)
 
+  var fight = require('../app/controllers/fight')
+  app.get('/fight/:userId', auth.requiresLogin, fight.main) 
 
   var stream = require('../app/controllers/Xstream')
 
@@ -38,4 +43,5 @@ var mongoose = require('mongoose')
         next()
       })
   })
+
 }

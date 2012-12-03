@@ -1,4 +1,4 @@
-extends ../layouts/default
+extends ../layouts/default-stream
 
 block main
   h1= user.name
@@ -17,9 +17,6 @@ block main
   | defeat procent
   h3= user.losing / total
 
-  each stream in streams
-    ul
-      li #{stream.looser.name}
-
   a(href="#{user._id}/edit") edit
 
+  #hero-donut

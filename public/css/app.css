@@ -43,7 +43,36 @@ a.tag {
   margin: 0 10px 0 0;
 }
 
+.countdown {
+  position: absolute;
+  display: block;
+  margin: auto;
+}
 
+#fightArea {
+  height: 300px;
+  border: 1px solid black;
+  width: 620px;
+  position: relative;
+}
+
+#player1 {
+  width: 30px;
+  height: 30px;
+  background: green;
+  position: absolute;
+  bottom: 0px;
+  left: 100px;
+}
+
+#player2 {
+  width: 30px;
+  height: 30px;
+  background: red;
+  position: absolute;
+  bottom: 0px;
+  left: 300px;
+}
 
 #player1span {
 

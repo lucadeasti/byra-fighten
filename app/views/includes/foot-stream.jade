@@ -1,0 +1,40 @@
+script(type='text/javascript', src='/js/jquery.min.js')
+script(type='text/javascript', src='/js/bootstrap.min.js')
+script(type='text/javascript', src='/js/bootbox.js')
+script(type='text/javascript', src='/js/jquery.tagsinput.min.js')
+script(type='text/javascript', src='/js/morris.min.js')
+script(type='text/javascript', src='/js/raphael-2.1.0.min.js')
+script(type="text/javascript")
+
+	$(function () {	
+		
+		var winning = parseFloat("#{user.winning}")
+		var loosing = parseFloat("#{user.losing}")
+		var total = winning + loosing
+		console.log(loosing)
+
+		hello = []
+
+		Morris.Donut({
+			element: 'hero-donut',
+			data: [
+				{label: 'winning', value: winning / total },
+				{label: 'loosing', value: loosing / total }
+			],
+			formatter: function (y) { return y + "%" }
+		});
+
+
+
+		function Data (label, value) {
+			this.label = label;
+			this.value = value;
+		};
+
+		var xName = new Data('winning', total)
+
+		
+		hello.push(xName)
+		console.log(hello)
+
+	});

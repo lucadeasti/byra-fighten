@@ -3,7 +3,7 @@ script(type='text/javascript', src='/js/bootstrap.min.js')
 script(type='text/javascript', src='/js/bootbox.js')
 script(type='text/javascript', src='/js/jquery.tagsinput.min.js')
 script(type='text/javascript', src='/js/app.js')
-script(type='text/javascript', src='/js/keypress.js')
+script(type='text/javascript', src='/js/mousetrap.min.js')
 script(type='text/javascript', src='/socket.io/socket.io.js')
 script(type="text/javascript")
 	
@@ -12,8 +12,6 @@ script(type="text/javascript")
 			// If player 1 leaves the game he should lose and the opponent should win
 			// Add animation to helth loss
 			// Add users profile picture
-			// Add "waiting for player" when we are one player
-			// When one player change the count to "waiting for player"
 		BUGS:
 
 	*/
@@ -22,17 +20,19 @@ script(type="text/javascript")
 
 	var runFirstCountdown = true; // Global variable if we should run the countdown from allusersconnected or winner?
 	var attackKey = true;
+	var message = 'right' // only a message, has no meaning
+	var attackDamage = 5;
 
-	usersArr = []; // Store all the connected users here
+	var usersArr = []; // Store all the connected users here
 
 	// Store userobject iwth all its properties
 	userObj = {
 		name   : "#{user.name}",
 		id 	   : "#{user.id}",
-		agency : "#{user.agency}"
+		agency : "#{user.agency}",
+		health : 100,
+		score  : 0
 	};
-
-	console.log('your user: ', userObj);
 
 	// on connection to socket, we send the users profile back to the server
 	socket.on('connect', function (){
@@ -55,11 +55,16 @@ script(type="text/javascript")
 
 		// do a for each loop on the cleared connected users list and append each user
 		$.each(usersArr, function (key, value) {
-			$('#connectedUsers').append('<li><a href="' + value.id +'">' + value.name + '</a></li>');
+			if (key <= 1) {
+				$('#connectedUsers').append('<li>' + value.name + '</li>');
+			} else {
+				$('#connectedUsers').append('<li><a href="' + value.id +'">' + value.name + '</a></li>');
+			}
 		});
-
+		console.log(usersArr)
 		// Assign player 1 name and in the future picture to the right health bar
 		$('#usernamePlayer1').html('<h1>' + usersArr[0].name + '</h1>');
+		
 		
 		// if we have a second player assign the same information to that persons heath bar
 		if(usersArr.length >= 2 ) {
@@ -70,7 +75,6 @@ script(type="text/javascript")
 
 		// Run the countdown if their is 2 people connected
 		if(usersArr.length === 2 && runFirstCountdown) {
-			$("body").unbind('keyup');
 			countdown(); // Run the countdown function
 		};
 
@@ -78,7 +82,6 @@ script(type="text/javascript")
 		if(usersArr.length <= 1 ) {
 			runFirstCountdown = true;
 			resethealth();
-			$("body").unbind('keyup');
 		};
 
 	})
@@ -92,7 +95,6 @@ script(type="text/javascript")
 		if(userLeft == usersArr[0].id || userLeft == usersArr[1].id ) {
 			socket.emit('reset count', 0);
 			resethealth();
-			$("body").unbind('keyup');
 		};
 
 		usersArr = data; // create a new user array with the players left
@@ -141,7 +143,6 @@ script(type="text/javascript")
 		console.log('the winner is ', winner.name);
 		socket.emit('update id', userObj);
 		socket.emit('reset count', 0);
-		$("body").unbind('keyup');
 		runFirstCountdown = false // change the variable so we can run the countdown from the winning function instead.
 		if(!runFirstCountdown) {
 			countdown();
@@ -156,6 +157,7 @@ script(type="text/javascript")
 	// make this in to a self invoking function
 	$player1bar = $("#player1span");
 	$player2bar = $("#player2span");
+
 	var player1healthLoaded = 100;
 	var player2healthLoaded = 100;
 
@@ -172,6 +174,7 @@ script(type="text/javascript")
 	};
 
 	function resethealth() {
+		Mousetrap.reset();
 		player1healthLoaded = 100;
 		$player1bar.css({width : player1healthLoaded +'%'});
 		player2healthLoaded = 100;
@@ -179,10 +182,16 @@ script(type="text/javascript")
 	};
 
 	function countdown () {
-		var count = 3;	
+		Mousetrap.reset();
+		$countdown = $(".countdown")
+		var count = 3;
+		$countdown.css({display : 'block'}).html('0' + count)
 		var countdown = setInterval(function () {
-			$(".countdown").html(count + " seconds remaining!");
+			$countdown.html('0' + count).animate({opacity : 0, fontSize : 30}, 1000, function () {
+				$countdown.css({opacity : 1, fontSize : 14})
+			});
 			if (count === 0) {
+				$('.countdown').css({display : 'none'})
 				keypressed(); // run the keypress function to allow player 1 and 2 to fight
 				clearInterval(countdown); // stops the countdown, TODO: remove the div that holds the number
 			}
@@ -194,26 +203,19 @@ script(type="text/javascript")
 	// This function runs inside the countdown function
 	// and handels what key to press + attack emit to the server
 	function keypressed () {
-		//start value for key pressing 
-		var keyressed = '37'; // dont think we need this var
-		$("body").keyup(function (e) {
-			// ONLY ALLOW ROOM1 AND 2 TO CLICK ON KEYS
-			if (userObj.id === usersArr[0].id || userObj.id === usersArr[1].id) {
-				var message = 'right' // only a message, has no meaning
-				var attackDamage = 5;
 
-				if(e.which === 39 && attackKey) { // We are cheching if the keypress is enter and if so do the function send chat
-					socket.emit('attack', message, userObj, attackDamage, player1healthLoaded, player2healthLoaded); // change name on send chat to attack
-					//console.log('player 1 helth is ', player1healthLoaded);
-					//console.log('player 2 helth is ', player2healthLoaded);
-					attackKey = false;
-				} else if (e.which === 37 && !attackKey) {
-					socket.emit('attack', message, userObj, attackDamage, player1healthLoaded, player2healthLoaded); // change name on send chat to attack
-					//console.log('player 1 helth is ', player1healthLoaded);
-					//console.log('player 2 helth is ', player2healthLoaded);
-					attackKey = true;
-				}
-			};
+		Mousetrap.bind('right', function(e, combo) {
+			if(attackKey === true ) {
+				attackKey = false
+				socket.emit('attack', message, userObj, attackDamage, player1healthLoaded, player2healthLoaded); // change name on send chat to attack
+			}
+		});
+
+		Mousetrap.bind('left', function(e, combo) {
+			if(attackKey === false ) {
+				attackKey = true
+				socket.emit('attack', message, userObj, attackDamage, player1healthLoaded, player2healthLoaded); // change name on send chat to attack
+			}
 		});
 	};
 

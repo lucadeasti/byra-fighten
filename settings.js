@@ -6,6 +6,7 @@
 var express = require('express')
   , mongoStore = require('connect-mongodb')
 
+
 exports.boot = function(app, config, passport, io){
   bootApplication(app, config, passport)
 }
@@ -35,6 +36,7 @@ function bootApplication(app, config, passport) {
       next()
     })
   
+
     // cookieParser should be above session
     app.use(express.cookieParser())
 
